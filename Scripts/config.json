@@ -1,0 +1,6 @@
+config = {
+    "partition": '',
+    "partitionReferenceColumn": '',
+    "idTable": 'id',
+    "principalTableName": 'teste'
+}

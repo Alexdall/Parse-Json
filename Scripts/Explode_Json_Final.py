@@ -250,3 +250,7 @@ for tb in e.listRefineTables:
             # df = spark_sess.createDataFrame(rdd,schema_final)
             df = spark_sess.read.json(rdd)
             df.show()
+           # df.write\
+           #   .mode('overwrite')\
+           #   .parquet("/home/alexandre/PycharmProjects/Parse-Json/Destino/"+tb[0])
+

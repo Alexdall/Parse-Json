@@ -1,14 +1,10 @@
-
-import re
 import sys, os
-import pandas as pd
 from pyspark.conf import SparkConf
 from pyspark.sql import SparkSession, Catalog
 from pyspark.sql import DataFrame, DataFrameStatFunctions, DataFrameNaFunctions
 from pyspark.sql import functions as F
 from pyspark.sql import types as T
 from pyspark.sql.types import Row
-from pyspark.sql.types import StructField, StructType, StringType, MapType
 
 spark_conf = SparkConf()
 spark_conf.setAll([
@@ -28,7 +24,7 @@ spark_reader = spark_sess.read
 spark_streamReader = spark_sess.readStream
 spark_ctxt.setLogLevel("WARN")
 
-# COMMAND ----------
+import re
 
 class ExplodeJson:
 
@@ -50,13 +46,13 @@ class ExplodeJson:
                     for item in _json:
                         for k, v in item.items():
                             if type(v) == list or type(v) == dict:
-                                if self.partition != "" and self.partitionReferenceColumn != "":
-                                    items.append((item[self.idTable],index,re.sub(self._regex, '', k),v,item[self.partitionReferenceColumn]))
-                                else:
-                                    items.append((item[self.idTable],index,re.sub(self._regex, '', k),v))
+                            #    if self.partition != "" and self.partitionReferenceColumn != "":
+                            #        items.append((item[self.idTable],index,re.sub(self._regex, '', k),v,item[self.partitionReferenceColumn]))
+                            #    else:
+                                 items.append((item[self.idTable],index,re.sub(self._regex, '', k),v))
 
-                        if self.partition != "" and self.partitionReferenceColumn != "":
-                            item[self.partition] = item[self.partitionReferenceColumn]
+                        #if self.partition != "" and self.partitionReferenceColumn != "":
+                        #    item[self.partition] = item[self.partitionReferenceColumn]
 
                         index = index + 1
 
@@ -69,65 +65,44 @@ class ExplodeJson:
                         parseJson(None,items)
                 else:
                     for lj in listJson:
-                        #print('lj :'+str(lj))
                         j = lj[3]
                         nj = {}
-                        ls = []
                         if type(j) == dict:
+                            j[self.idTable] = lj[0]
                             for k, v in j.items():
-                                #print('k :'+str(k))
-                                #print('lj[0] :'+ str(lj[0]))
-                                #print('v :'+str(v))
-                                #print(type(v))
-                                #print('lj[4] :'+str(lj[4]))
-                                if type(v) == list:# or type(v) == dict:
-                                    #print('oassou list')
-                                    if self.partition != "" and self.partitionReferenceColumn != "":
-                                        items.append((lj[0],None,re.sub(self._regex, '', k),v,lj[4]))
-                                    else:
-                                        items.append((lj[0],None,re.sub(self._regex, '', k),v))
-                                elif type(v) == dict:
-                                    #3print('passou dict')
-                                    if self.partition != "" and self.partitionReferenceColumn != "":
-                                        ls.append(v)
-                                        #print(type(ls))
-                                        #print('ls :'+str(ls))
-                                        items.append((lj[0],None,re.sub(self._regex, '', k),ls))
-                                    else:
-                                        ls.append(v)
-                                        #print(type(ls))
-                                        #print('ls :' + str(ls))
-                                        items.append((lj[0],None,re.sub(self._regex, '', k),ls))
-                                    ls = []
+                                print(k)
+                                print(v)
+                                print(type(v))
+                                if type(v) == list or type(v) == dict:
+                                    #if self.partition != "" and self.partitionReferenceColumn != "":
+                                    #    items.append((lj[0],None,re.sub(self._regex, '', k),v,lj[4]))
+                                    #else:
+                                    items.append((lj[0],index,re.sub(self._regex, '', k),v))
+                                    if type(v) == list:
+                                        parseJson(None,items)
                                 else:
                                     nj[re.sub(self._regex, '', k)]=v
-                                    #print('v :'+str(v))
-                                    #print('nj :'+str(nj))
-                                    nj[self.idTable] = lj[0]
-                                    if self.partition != "" and self.partitionReferenceColumn != "":
-                                            nj[self.partition] = lj[4]
-                                    self.listTable.append((lj[2],nj))
-                                    nj = {}
-                            if len(items) > 0:
-                                parseJson(None,items)
+                                #    if self.partition != "" and self.partitionReferenceColumn != "":
+                                #            nj[self.partition] = lj[4]
+
+                            self.listTable.append((lj[2],nj))
+
                         elif type(j) == list:
-                            items=[]
                             for item in j:
                                 nj = {}
                                 try:
                                     for k,v in item.items():
                                         if type(v) == list or type(v) == dict:
-                                            if self.partition != "" and self.partitionReferenceColumn != "":
-                                                items.append((lj[0],None,re.sub(self._regex, '', k),v,lj[4]))
-                                            else:
-                                                items.append((lj[0],None,re.sub(self._regex, '', k),v))
+                                        #    if self.partition != "" and self.partitionReferenceColumn != "":
+                                         #       items.append((lj[0],None,re.sub(self._regex, '', k),v,lj[4]))
+                                            items.append((lj[0], None, re.sub(self._regex, '', k), v))
                                         else:
                                             nj[re.sub(self._regex, '', k)]=v
                                             nj[self.idTable] = lj[0]
                                             if self.partition != "" and self.partitionReferenceColumn != "":
                                                 nj[self.partition] = lj[4]
+
                                     self.listTable.append((lj[2],nj))
-                                    nj={}
                                 except AttributeError as error:
                                     _str = ""
                                     for item in lj[3]:
@@ -138,10 +113,11 @@ class ExplodeJson:
                                     if self.partition != "" and self.partitionReferenceColumn != "":
                                                 nj[self.partition] = lj[4]
                                     self.listTable.append((lj[2],nj))
-                                    break
-                            if len(items) > 0:
-                                parseJson(None,items)
+
+                if len(items) > 0:
+                    parseJson(None,items)
             except Exception as e:
+                print(item)
                 strError = 'Error in parseJson(): '+str(e)
                 strError = strError.replace("'","")
                 raise Exception(strError)
@@ -220,7 +196,6 @@ j = '''[
 		"origem" : "VAREJOFACIL"
 	}
 	]
-
 '''
 
 #with open ("/home/alexandre/VisualCodeProjects/Parse_json/Fontes/vendas-fgpinheiros-grandcru_4.json",'r' ) as f:
@@ -244,39 +219,34 @@ e.recursiveParseJson(json.loads(j))
 
 e.refineTables()
 
-
-#def createTables():
-
 for tb in e.listRefineTables:
     print(tb[0])
     print(tb[1])
 
     ls = tb[1]
-    #print(type(ls))
+    # print(type(ls))
     schema = []
     conta = 0
     valida_conta = 0
 
-    #print('valida_conta: '+str(valida_conta))
+    # print('valida_conta: '+str(valida_conta))
     for l in ls:
-        #print('l :'+str(l))
-        #print((l))
+        # print('l :'+str(l))
+        # print((l))
         columns = list(l.keys())
         conta = len(columns)
-        #print(conta)
-        #print(valida_conta)
+        # print(conta)
+        # print(valida_conta)
         if conta > valida_conta:
-            #data = list(l.values())
+            # data = list(l.values())
             schema = []
-         #   print('passou aqui')
+            #   print('passou aqui')
             for m in range(len(columns)):
-                schema.append(columns[m]+' string')
+                schema.append(columns[m] + ' string')
                 valida_conta = conta
                 sss = ', '.join(schema)
                 schema_final = sss
             rdd = spark_sess.sparkContext.parallelize([ls])
-            #df = spark_sess.createDataFrame(rdd,schema_final)
+            # df = spark_sess.createDataFrame(rdd,schema_final)
             df = spark_sess.read.json(rdd)
             df.show()
-
-

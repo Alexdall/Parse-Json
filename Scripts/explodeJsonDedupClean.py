@@ -176,15 +176,16 @@ print(k[:1000])
 #j = j.replace('\\','')#.replace('"body" : "{','"body" : {').replace('"}",','"},').replace('true','"true"').replace('false','"false"')
 '''
 
-path = "/home/alexandre/VisualCodeProjects/Parse_json/Fontes/vendas-fgpinheiros-grandcru.json"
+path = "/home/alexandre/PycharmProjects/Parse-Json/Fontes/cadastros_grand-cru.json"
 
 def loadReplaceJson(path):
     f = open(path,'r')
     j = f.read()
+    #print(j[:715319])
     js = json.loads(j)
     for i in js.values():
         i = str(i)
-        i = i.replace('''body': '{"''','''body': {"''').replace("\"}'","\"}").replace('false','"false"').replace('true','"true"').replace("'",'"')
+        i = i.replace("}]}}'",'}]}}').replace("}]}'",'}]}').replace('''body': '{"''','''body': {"''').replace("}',","},").replace("\"}'","\"}").replace('false','"false"').replace('true','"true"').replace("'",'"')
         return (i)
 
 file = loadReplaceJson(path)

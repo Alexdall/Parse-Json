@@ -30,8 +30,11 @@ class ExplodeJson:
         js = json.loads(j)
         for i in js.values():
             i = str(i)
-            i = i.replace('''body': '{"''', '''body': {"''').replace("\"}'", "\"}").replace('false', '"false"').replace(
-                'true', '"true"').replace("'", '"')
+            #i = i.replace('''body': '{"''', '''body': {"''').replace("\"}'", "\"}").replace('false', '"false"').replace(
+            #    'true', '"true"').replace("'", '"')
+            i = i.replace("}]}}'", '}]}}').replace("}]}'", '}]}').replace('''body': '{"''', '''body': {"''').replace(
+                "}',", "},").replace("\"}'", "\"}").replace('false', '"false"').replace('true', '"true"').replace("'",
+                                                                                                          '"')
             return (i)
 
     def recursiveParseJson(self, _json):
